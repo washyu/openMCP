@@ -1,0 +1,59 @@
+services:
+  openmcp:
+    build:
+      context: .
+      dockerfile: Dockerfile.openmcp
+    container_name: openmcp
+    ports:
+      - "8000:5000"  # Map to 8000 to avoid conflicts
+    environment:
+      - DEBUG=True
+      - OPENAPI_SPECS_DIR=/app/specs
+      - API_PORT=5000
+    volumes:
+      - ./specs:/app/specs:ro
+      - ./logs:/app/logs
+    networks:
+      - openmcp-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  calculator:
+    build:
+      context: .
+      dockerfile: Dockerfile.calculator
+    container_name: calculator-api
+    ports:
+      - "8001:5001"  # Map to 8001 to avoid conflicts
+    networks:
+      - openmcp-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: Ollama container for complete isolation
+  # Uncomment if you want to run Ollama in Docker too
+  # ollama:
+  #   image: ollama/ollama:latest
+  #   container_name: ollama
+  #   ports:
+  #     - "11434:11434"
+  #   volumes:
+  #     - ollama-data:/root/.ollama
+  #   networks:
+  #     - openmcp-network
+  #   command: serve
+
+networks:
+  openmcp-network:
+    driver: bridge
+
+volumes:
+  ollama-data:

@@ -1,0 +1,225 @@
+openapi: 3.0.0
+info:
+  title: Calculator API
+  version: 1.0.0
+  description: A simple calculator API with basic math operations exposed as AI tools
+
+servers:
+  - url: http://localhost:5001
+    description: Local calculator API server
+
+paths:
+  /calculate/add:
+    post:
+      summary: Add two numbers
+      description: Performs addition of two numbers
+      x-ai-tool: true
+      x-ai-description: "Add two numbers together. Use this tool when you need to perform addition or sum values."
+      x-ai-category: "math"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - a
+                - b
+              properties:
+                a:
+                  type: number
+                  description: First number to add
+                  example: 10
+                b:
+                  type: number
+                  description: Second number to add
+                  example: 5
+      responses:
+        '200':
+          description: Addition result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  operation:
+                    type: string
+                    example: "add"
+                  a:
+                    type: number
+                  b:
+                    type: number
+                  result:
+                    type: number
+                    description: The sum of a and b
+                  expression:
+                    type: string
+                    example: "10 + 5 = 15"
+        '400':
+          description: Invalid parameters
+
+  /calculate/subtract:
+    post:
+      summary: Subtract two numbers
+      description: Subtracts the second number from the first
+      x-ai-tool: true
+      x-ai-description: "Subtract one number from another (a - b). Use this tool when you need to find the difference between two numbers."
+      x-ai-category: "math"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - a
+                - b
+              properties:
+                a:
+                  type: number
+                  description: Number to subtract from (minuend)
+                  example: 10
+                b:
+                  type: number
+                  description: Number to subtract (subtrahend)
+                  example: 3
+      responses:
+        '200':
+          description: Subtraction result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  operation:
+                    type: string
+                    example: "subtract"
+                  a:
+                    type: number
+                  b:
+                    type: number
+                  result:
+                    type: number
+                    description: The difference of a minus b
+                  expression:
+                    type: string
+                    example: "10 - 3 = 7"
+        '400':
+          description: Invalid parameters
+
+  /calculate/multiply:
+    post:
+      summary: Multiply two numbers
+      description: Multiplies two numbers together
+      x-ai-tool: true
+      x-ai-description: "Multiply two numbers together. Use this tool when you need to find the product of two values."
+      x-ai-category: "math"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - a
+                - b
+              properties:
+                a:
+                  type: number
+                  description: First number to multiply
+                  example: 4
+                b:
+                  type: number
+                  description: Second number to multiply
+                  example: 7
+      responses:
+        '200':
+          description: Multiplication result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  operation:
+                    type: string
+                    example: "multiply"
+                  a:
+                    type: number
+                  b:
+                    type: number
+                  result:
+                    type: number
+                    description: The product of a and b
+                  expression:
+                    type: string
+                    example: "4 × 7 = 28"
+        '400':
+          description: Invalid parameters
+
+  /calculate/divide:
+    post:
+      summary: Divide two numbers
+      description: Divides the first number by the second
+      x-ai-tool: true
+      x-ai-description: "Divide one number by another (a ÷ b). Use this tool when you need to find the quotient of two numbers. Note: Division by zero will return an error."
+      x-ai-category: "math"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - a
+                - b
+              properties:
+                a:
+                  type: number
+                  description: Number to be divided (dividend)
+                  example: 20
+                b:
+                  type: number
+                  description: Number to divide by (divisor)
+                  example: 4
+      responses:
+        '200':
+          description: Division result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  operation:
+                    type: string
+                    example: "divide"
+                  a:
+                    type: number
+                  b:
+                    type: number
+                  result:
+                    type: number
+                    description: The quotient of a divided by b
+                  expression:
+                    type: string
+                    example: "20 ÷ 4 = 5"
+        '400':
+          description: Invalid parameters or division by zero
+
+  /health:
+    get:
+      summary: Health check
+      description: Check if the calculator API is running
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "healthy"
+                  service:
+                    type: string
+                    example: "Calculator API"

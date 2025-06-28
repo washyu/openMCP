@@ -1,225 +1,200 @@
-# OpenAPI for AI Tool Integration
+# OpenMCP - OpenAPI Model Context Protocol
 
-## What is OpenAPI?
+A Flask-based implementation that allows AI systems to discover and execute tools from OpenAPI specifications, providing an enterprise-friendly alternative to traditional MCP implementations.
 
-OpenAPI (formerly called Swagger) is a specification for describing REST APIs. It's a standardized way to document:
+## 🎯 Project Overview
 
-- What endpoints exist (`/users`, `/orders`, etc.)
-- HTTP methods (GET, POST, PUT, DELETE)
-- Request/response formats
-- Parameters and their types
-- Authentication requirements
+OpenMCP leverages existing OpenAPI (Swagger) specifications to create AI-callable tools. Instead of requiring custom protocols, companies can expose their existing REST APIs as AI tools by simply adding `x-ai-tool` extensions to their OpenAPI specs.
 
-## Example OpenAPI Specification
+### Key Benefits
 
-Here's a simple example of an OpenAPI spec:
+- **✅ Standards-Based**: Uses existing OpenAPI specifications
+- **✅ Enterprise-Ready**: Leverages existing API infrastructure, security, and monitoring
+- **✅ Zero Custom Protocols**: No stdio or custom communication needed
+- **✅ Gradual Adoption**: Companies can expose specific endpoints incrementally
+- **✅ Scalable**: Standard HTTP load balancing, caching, and rate limiting
 
-```yaml
-openapi: 3.0.0
-info:
-  title: User Management API
-  version: 1.0.0
-  description: API for managing users and orders
+## 🚀 Quick Start (Docker)
 
-servers:
-  - url: https://api.example.com/v1
-    description: Production server
+```bash
+# Start all services
+docker-compose up -d
 
-paths:
-  /users/{userId}:
-    get:
-      summary: Get user by ID
-      description: Retrieve a specific user's information
-      parameters:
-        - name: userId
-          in: path
-          required: true
-          description: The unique identifier for the user
-          schema:
-            type: string
-      responses:
-        '200':
-          description: User found successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  id:
-                    type: string
-                    description: User's unique identifier
-                  name:
-                    type: string
-                    description: User's full name
-                  email:
-                    type: string
-                    format: email
-                    description: User's email address
-        '404':
-          description: User not found
-
-  /orders:
-    post:
-      summary: Create new order
-      description: Creates a new customer order
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - customerId
-                - items
-              properties:
-                customerId:
-                  type: string
-                  description: ID of the customer placing the order
-                items:
-                  type: array
-                  description: List of items to order
-                  items:
-                    type: object
-                    properties:
-                      productId:
-                        type: string
-                      quantity:
-                        type: integer
-                        minimum: 1
-      responses:
-        '201':
-          description: Order created successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  orderId:
-                    type: string
-                  status:
-                    type: string
-                  total:
-                    type: number
+# Chat with AI
+uv run python examples/docker_chat_client.py
 ```
 
-## How This Relates to AI Tool Integration
+## 📁 Project Structure
 
-The key insight is that instead of using MCP's custom stdio protocol, you could leverage existing OpenAPI specifications that companies already maintain. Here's how:
+```
+├── openmcp/                 # Core OpenMCP library
+│   ├── api/                 # REST API endpoints
+│   ├── core/                # Core functionality (parsers, integrations)
+│   └── utils/               # Utilities and helpers
+├── examples/                # Example applications
+│   ├── calculator_api.py    # Example API with AI tools
+│   ├── docker_chat_client.py  # Docker-aware chat client
+│   └── simple_chat.py       # Simple Ollama integration
+├── specs/                   # OpenAPI specifications
+│   ├── calculator-api.yaml  # Example calculator API spec
+│   └── example-api.yaml     # Extended example spec
+├── docs/                    # Documentation
+│   ├── README_FLASK.md      # Flask implementation details
+│   ├── README_DOCKER.md     # Docker setup guide
+│   └── README_OLLAMA.md     # Ollama integration guide
+├── docker-compose.yml       # Docker orchestration
+└── CLAUDE.md               # Development guide
+```
 
-### 1. Mark AI-Callable Endpoints
+## 🛠 How It Works
 
-Companies could extend their existing OpenAPI specs with custom extensions to mark endpoints as AI-callable:
+1. **OpenAPI Extension**: Mark endpoints as AI-callable using `x-ai-tool: true`
+2. **Tool Discovery**: OpenMCP scans OpenAPI specs and extracts AI tools
+3. **Tool Execution**: AI systems call tools via standard HTTP requests
+4. **Enterprise Integration**: Uses existing API infrastructure
+
+### Example OpenAPI Extension
 
 ```yaml
 paths:
-  /orders:
+  /calculate/add:
     post:
-      summary: Create new order
-      description: Creates a new customer order
-      x-ai-tool: true                    # Mark as AI-callable
-      x-ai-description: "Use this tool to create orders for customers when they request to purchase items"
-      x-ai-category: "commerce"          # Optional categorization
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - customerId
-                - items
-              properties:
-                customerId:
-                  type: string
-                  description: ID of the customer placing the order
-                items:
-                  type: array
-                  description: List of items to order
-                  items:
-                    type: object
-                    properties:
-                      productId:
-                        type: string
-                      quantity:
-                        type: integer
-
-  /users/{userId}/preferences:
-    put:
-      summary: Update user preferences
+      summary: Add two numbers
       x-ai-tool: true
-      x-ai-description: "Update a user's account preferences and settings"
-      parameters:
-        - name: userId
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                notifications:
-                  type: boolean
-                theme:
-                  type: string
-                  enum: ["light", "dark"]
+      x-ai-description: "Add two numbers together"
+      x-ai-category: "math"
+      # ... rest of standard OpenAPI spec
 ```
 
-### 2. Web Client Architecture
+## 🤖 AI Integration
 
-Your web client would then:
+OpenMCP includes built-in support for:
 
-1. **Discover Tools**: Read OpenAPI specs and extract AI-callable endpoints
-2. **Convert to AI Format**: Transform OpenAPI definitions into tool definitions that Ollama understands
-3. **Execute Tools**: Handle HTTP calls when the AI wants to use those tools
+- **Ollama**: Local AI models with tool calling
+- **Rich Chat Interface**: Beautiful terminal-based chat client
+- **Conversation Management**: Persistent chat history and context
 
-```typescript
-interface AITool {
-  name: string;
-  description: string;
-  endpoint: string;
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE';
-  parameters: OpenAPISchema;
-  authentication?: AuthConfig;
-}
+### Example AI Conversation
 
-class WebMCPClient {
-  async discoverTools(apiSpecUrl: string): Promise<AITool[]> {
-    // Fetch OpenAPI spec
-    // Parse and find x-ai-tool marked endpoints
-    // Convert to AITool format
-  }
-  
-  async executeTool(tool: AITool, params: any): Promise<any> {
-    // Make HTTP request to the actual API endpoint
-    // Handle authentication, error handling, etc.
-  }
-  
-  async registerWithOllama(tools: AITool[]): Promise<void> {
-    // Convert AITool[] to Ollama's function calling format
-    // Register with Ollama instance
-  }
-}
+```
+You: What is 42 plus 17?
+AI: I'll add those numbers for you.
+    42 + 17 = 59
 ```
 
-## Advantages Over stdio MCP
+## 📚 Documentation
 
-- **Scalability**: Standard HTTP load balancing, caching, rate limiting
-- **Security**: OAuth, API keys, standard enterprise authentication
-- **Monitoring**: Existing APM tools work out of the box  
-- **Documentation**: Swagger UI for human developers too
-- **Gradual Adoption**: Companies can expose specific endpoints to AI incrementally
-- **Standards-Based**: Leverages existing OpenAPI ecosystem and tooling
-- **Enterprise-Friendly**: Fits into existing API governance and security policies
+- **[Flask Implementation](docs/README_FLASK.md)** - Core API and architecture
+- **[Docker Setup](docs/README_DOCKER.md)** - Containerized deployment
+- **[Ollama Integration](docs/README_OLLAMA.md)** - AI chat client setup
+- **[CLAUDE.md](CLAUDE.md)** - Development guide for Claude Code
 
-## Implementation Flow
+## 🏃‍♂️ Getting Started
 
-1. **Company maintains OpenAPI spec** (they probably already do this)
-2. **Add `x-ai-tool` extensions** to mark AI-callable endpoints
-3. **Web client discovers tools** from the OpenAPI spec
-4. **Client registers tools with Ollama** using function calling
-5. **AI makes tool requests** through standard HTTP calls
-6. **Standard API infrastructure** handles scaling, auth, monitoring
+### Prerequisites
 
-This approach essentially turns any REST API into an AI tool provider with minimal additional work, while maintaining enterprise-grade reliability and security.
+- Python 3.11+
+- [uv](https://github.com/astral-sh/uv) package manager
+- Docker and Docker Compose
+- [Ollama](https://ollama.ai) (for AI chat features)
+
+### Installation
+
+1. **Clone and setup**:
+   ```bash
+   git clone <repository-url>
+   cd openMCP
+   uv sync
+   ```
+
+2. **Choose your deployment**:
+
+   **Option A: Docker (Recommended)**
+   ```bash
+   docker-compose up -d
+   uv run python examples/docker_chat_client.py
+   ```
+
+   **Option B: Local Development**
+   ```bash
+   # Terminal 1 - OpenMCP
+   uv run python -m openmcp.app
+   
+   # Terminal 2 - Calculator API
+   uv run python examples/calculator_api.py
+   
+   # Terminal 3 - Chat
+   uv run python examples/simple_chat.py
+   ```
+
+## 🎮 Example: Calculator API
+
+The project includes a complete example showing how to:
+
+1. Create a REST API with math operations
+2. Define OpenAPI spec with AI tool extensions
+3. Register the API with OpenMCP
+4. Use AI to perform calculations via natural language
+
+Try asking: *"What is 156 divided by 12?"* or *"Calculate 25 times 4"*
+
+## 🏗 Architecture
+
+```
+User Input → Ollama → OpenMCP → REST API
+     ↓         ↓         ↓         ↓
+AI Response ← Tool Call ← Discovery ← HTTP Response
+```
+
+- **OpenMCP**: Tool discovery and execution coordinator
+- **Ollama**: Local AI model with tool calling capabilities
+- **REST APIs**: Standard HTTP APIs with OpenAPI specifications
+- **Chat Client**: Rich terminal interface for natural interaction
+
+## 🔧 Development
+
+### Adding New APIs
+
+1. Create your REST API with OpenAPI spec
+2. Add `x-ai-tool: true` to endpoints you want AI-accessible
+3. Register with OpenMCP:
+   ```bash
+   curl -X POST http://localhost:8000/api/discovery/register \
+     -H "Content-Type: application/json" \
+     -d '{"spec_path": "./path/to/your/spec.yaml"}'
+   ```
+
+### Environment Variables
+
+```bash
+# OpenMCP Configuration
+OPENMCP_PORT=8000
+DEBUG=True
+OPENAPI_SPECS_DIR=./specs
+
+# Ollama Configuration  
+OLLAMA_HOST=http://localhost:11434
+```
+
+## 📋 API Endpoints
+
+- `GET /health` - Health check
+- `POST /api/discovery/register` - Register OpenAPI specification
+- `GET /api/discovery/tools` - List discovered tools
+- `POST /api/tools/execute` - Execute a tool
+- `GET /api/tools/list` - List registered tools
+
+## 🤝 Contributing
+
+1. Follow the existing code structure
+2. Add tests for new functionality
+3. Update documentation
+4. Ensure Docker setup works
+
+## 📄 License
+
+This project demonstrates the OpenMCP concept for integrating AI with existing REST APIs through OpenAPI specifications.
+
+---
+
+**OpenMCP** - Making enterprise APIs AI-ready through standards-based integration.
